@@ -1,9 +1,9 @@
-# IBC-lightning
+# IBC-Lightning
 
 ![python](https://img.shields.io/badge/python-3.10-blue)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Pytorch lightning re-implementation of [Implicit Behavioral Cloning](https://arxiv.org/abs/2109.00137).
+Lightning re-implementation of [Implicit Behavioral Cloning](https://arxiv.org/abs/2109.00137).
 
 ## References
 

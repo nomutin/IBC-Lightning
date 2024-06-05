@@ -95,7 +95,6 @@ setuptools==70.0.0
 sympy==1.12.1
     # via torch
 torch==2.3.0
-    # via ibc-lightning
     # via lightning
     # via pytorch-lightning
     # via torchmetrics

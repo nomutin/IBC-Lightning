@@ -115,7 +115,6 @@ tomli==2.0.1
     # via mypy
     # via pytest
 torch==2.3.0
-    # via ibc-lightning
     # via lightning
     # via pytorch-lightning
     # via torchmetrics
