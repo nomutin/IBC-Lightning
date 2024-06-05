@@ -1,0 +1,71 @@
+[project]
+name = "ibc_lightning"
+version = "0.1.0"
+description = "pytorch-lightning implementation of IBC"
+authors = [
+    { name = "nomutin", email = "nomura0508@icloud.com" }
+]
+dependencies = [
+    "torch>=2.3.0",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "ruff>=0.4.7",
+    "mypy>=1.10.0",
+    "pytest-cov>=5.0.0",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ibc_lightning"]
+
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.rye.scripts]
+cov = "pytest -ra --cov=src --cov-report=term --cov-report=xml"
+
+[tool.mypy]
+python_version = 3.8
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 79
+target-version = "py38"
+
+[tool.ruff.lint]
+preview = true
+select = ["ALL"]
+ignore = [
+    "CPY001",  # missing-copyright-notice
+    "ISC001",  # single-line-implicit-string-concatenation
+    "COM812",  # missing-comma-in-multiline
+    "S101",    # assert
+]
+fixable = ["ALL"]
+unfixable = []
+exclude = [".git", ".ruff_cache", ".venv",]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+preview = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["ibc_lightning"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
