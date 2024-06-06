@@ -1,6 +1,6 @@
 [project]
 name = "ibc_lightning"
-version = "0.1.0"
+version = "0.0.1"
 description = "pytorch-lightning implementation of IBC"
 authors = [
     { name = "nomutin", email = "nomura0508@icloud.com" }
@@ -55,13 +55,15 @@ ignore = [
     "CPY001",  # missing-copyright-notice
     "ISC001",  # single-line-implicit-string-concatenation
     "COM812",  # missing-comma-in-multiline
-    "S101",    # assert
-    "PLR0913",
 ]
 fixable = ["ALL"]
 unfixable = []
 exclude = [".git", ".ruff_cache", ".venv",]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/conftest.py" = ["PLR6301"]
+"tests/test__core.py" = ["S101"]
 
 [tool.ruff.format]
 preview = true
