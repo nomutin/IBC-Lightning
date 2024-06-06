@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up rye
+        uses: eifinger/setup-rye@v3
+      - name: Install dependencies
+        run: rye sync --no-lock
+      - name: Run lint
+        run: rye lint
+      - name: Run test with coverage
+        run: rye run test
