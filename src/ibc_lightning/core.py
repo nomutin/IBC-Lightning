@@ -6,8 +6,7 @@ Glossary
 B : バッチサイズ
 N : サンプリングの次元
 D : 行動次元
-E : 観測embedding
-C, H, W : 観測のチャンネル, 高さ, 幅
+E : 状態のembeddingの次元数
 
 References
 ----------
@@ -32,19 +31,20 @@ LossDict: TypeAlias = dict[str, Tensor]
 
 class IBC(LightningModule):
     """
-    Implicit Behavioral Cloning(Derivative Free Optimizer).
+    Implicit Behavioral Cloning(w/ Derivative Free Optimizer).
 
     Parameters
     ----------
-    obs_encoder : nn.Module
-        観測のエンコーダ.
-        [B, C, H, W] -> [*, E] へ変換するモデルに限る.
+    state_encoder : nn.Module
+        状態(観測)のエンコーダ.
+        [B, *] -> [B, E] へ変換するモデルに限る.
     energy_head : nn.Module
         観測・行動からエネルギーを予測するモデル.
-        [B, E + D] -> [*, 1] へ変換するモデルに限る.
+        [B, E + D] -> [B, 1] へ変換するモデルに限る.
     lower_bounds : tuple[float, ...]
         各次元の行動の下限. shape: [D]
-    upper_bounds : tuple[float, ...] 各次元の行動の上限. shape: [D]
+    upper_bounds : tuple[float, ...]
+        各次元の行動の上限. shape: [D]
     train_samples : int
         学習時のサンプリング数.
     inference_samples : int
@@ -54,22 +54,22 @@ class IBC(LightningModule):
     def __init__(
         self,
         *,
-        obs_encoder: nn.Module,
+        state_encoder: nn.Module,
         energy_head: nn.Module,
         upper_bounds: tuple[float, ...],
         lower_bounds: tuple[float, ...],
-        train_samples: int = 2**5,
+        train_samples: int = 2**10,
         inference_samples: int = 2**14,
     ) -> None:
         super().__init__()
-        self.obs_encoder = obs_encoder
+        self.state_encoder = state_encoder
         self.energy_head = energy_head
         self.lower_bounds = Tensor(lower_bounds)
         self.upper_bounds = Tensor(upper_bounds)
         self.train_samples = train_samples
         self.inference_samples = inference_samples
 
-    def forward(self, actions: Tensor, observations: Tensor) -> Tensor:
+    def forward(self, actions: Tensor, states: Tensor) -> Tensor:
         """
         エネルギーを予測する.
 
@@ -77,17 +77,17 @@ class IBC(LightningModule):
         ----------
         actions : Tensor
             負例込みの行動. shape: [B, N, D]
-        observation : Tensor
-            観測. shape: [B, C, H, W]
+        states : Tensor
+            状態. shape: [B, *]
 
         Returns
         -------
         energy : Tensor
             エネルギー. shape: [B, N]
         """
-        obs_embed = self.obs_encoder(observations)
-        obs_embed = repeat(obs_embed, "B E -> B N E", N=actions.shape[1])
-        energy = self.energy_head(torch.cat([obs_embed, actions], dim=-1))
+        state_embed = self.state_encoder(states)
+        state_embed = repeat(state_embed, "B E -> B N E", N=actions.shape[1])
+        energy = self.energy_head(torch.cat([state_embed, actions], dim=-1))
         return rearrange(energy, "B N 1 -> B N")  # type: ignore[no-any-return]
 
     def sample(self, batch_size: int, num_samples: int) -> Tensor:
@@ -148,9 +148,9 @@ class IBC(LightningModule):
         Parameters
         ----------
         batch : DataGroup
-            observation: Tensor
-                観測. shape: [*B, C, H, W]
-            action: Tensor
+            states: Tensor
+                状態. shape: [*B, *]
+            actions: Tensor
                 行動. shape: [*B, D]
 
         Returns
@@ -158,22 +158,24 @@ class IBC(LightningModule):
         loss : LossDict
             損失.
         """
-        observations, action = batch
+        states, actions = batch
 
-        observations, _ = pack([observations], "* C H W")
-        action, _ = pack([action], "* D")
+        # [*B, D] -> [B, D]
+        actions, ps = pack([actions], "* D")
+        # [*B, *] -> [B, *]
+        states = states.view(-1, *states.shape[len(ps[0]):])
 
         negatives = self.sample(
-            batch_size=action.shape[0],
+            batch_size=actions.shape[0],
             num_samples=self.train_samples,
         )
         actions, ground_truth = self.shuffle(
-            positive=action,
+            positive=actions,
             negatives=negatives,
         )
         energy = self.forward(
             actions=actions,
-            observations=observations,
+            states=states,
         )
         loss = tf.cross_entropy(
             input=energy.mul(-1),
@@ -184,7 +186,7 @@ class IBC(LightningModule):
 
     def predict_step(
         self,
-        observation: Tensor,
+        state: Tensor,
         noise_scale: float = 0.33,
         noise_shrink: float = 0.50,
         num_iters: int = 3,
@@ -194,8 +196,8 @@ class IBC(LightningModule):
 
         Parameters
         ----------
-        observation : Tensor
-            観測. shape: [B, C, H, W]
+        state : Tensor
+            状態. shape: [B, *]
         noise_scale : float
             ノイズの初期倍率.
         noise_shrink : float
@@ -209,7 +211,7 @@ class IBC(LightningModule):
             最もエネルギーが低い行動. shape: [B, D]
 
         """
-        batch_size = observation.shape[0]
+        batch_size = state.shape[0]
         samples = self.sample(
             batch_size=batch_size,
             num_samples=self.inference_samples,
@@ -217,7 +219,7 @@ class IBC(LightningModule):
 
         for _ in range(num_iters):
             energies = self.forward(
-                observations=observation,
+                states=state,
                 actions=samples,
             )
             probs = tf.softmax(energies.mul(-1.0), dim=-1)
@@ -229,15 +231,12 @@ class IBC(LightningModule):
 
             samples = samples[torch.arange(batch_size)[..., None], idxs]
             samples = torch.randn_like(samples).mul(noise_scale).add(samples)
-            samples = samples.clamp(
-                min=self.lower_bounds,
-                max=self.upper_bounds,
-            )
+            samples = samples.clamp(self.lower_bounds, self.upper_bounds)
 
             noise_scale *= noise_shrink
 
         energies = self.forward(
-            observations=observation,
+            states=state,
             actions=samples,
         )
         probs = tf.softmax(energies.mul(-1.0), dim=-1)
