@@ -7,9 +7,9 @@ from ibc_lightning import IBC
 from tests.conftest import (
     ACTION_DIM,
     BATCH_SIZE,
+    DummyHead,
     DummyObsEncoder,
     DummyStateEncoder,
-    DummyHead,
 )
 
 
