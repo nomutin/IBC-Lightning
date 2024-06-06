@@ -31,7 +31,7 @@ class DummyStateEncoder(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         """入力に関係なく適切な形状のテンソルを返す."""
-        batch_size, _, = x.shape
+        batch_size, _ = x.shape
         return torch.rand(batch_size, EMBED_DIM)
 
 
