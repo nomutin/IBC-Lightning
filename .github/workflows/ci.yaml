@@ -17,4 +17,4 @@ jobs:
       - name: Run lint
         run: rye lint
       - name: Run test with coverage
-        run: rye run test
+        run: rye run cov
