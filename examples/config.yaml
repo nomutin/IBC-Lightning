@@ -1,0 +1,74 @@
+---
+seed_everything: 42
+
+model:
+  class_path: ibc_lightning.IBC
+  init_args:
+    state_encoder:
+      class_path: utils.ModuleList
+      init_args:
+        modules:
+          - class_path: cnn.CoordConv2d
+          - class_path: torchgeometry.contrib.SpatialSoftArgmax2d
+          - class_path: einops.layers.torch.Rearrange
+            init_args:
+              pattern: 'b d xy -> b (d xy)'
+
+    energy_head:
+      class_path: utils.ModuleList
+      init_args:
+        modules:
+          - class_path: torch.nn.Linear
+            init_args:
+              in_features: 12
+              out_features: 64
+          - class_path: torch.nn.ReLU
+          - class_path: torch.nn.Linear
+            init_args:
+              in_features: 64
+              out_features: 1
+
+    upper_bounds: [1.0, 1.0]
+    lower_bounds: [-1.0, -1.0]
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+trainer:
+  accelerator: gpu
+  devices: [1]
+  max_epochs: -1
+  gradient_clip_val: 10
+  deterministic: true
+  precision: 16-mixed
+  log_every_n_steps: 1
+  logger:
+    class_path: WandbLogger
+    init_args:
+      log_model: true
+      project: ibc-test
+      save_dir: tmp
+  callbacks:
+    -
+      class_path: EarlyStopping
+      init_args:
+        monitor: val_loss
+        patience: 200
+        mode: min
+        verbose: True
+    - 
+      class_path: ModelCheckpoint
+      init_args:
+        monitor: val_loss
+        mode: min
+        save_top_k: 1
+
+data:
+  class_path: dataset.CircleDataModule
+  init_args:
+    train_size: 16
+    val_size: 4
+    num_points: 50
+    batch_size: 8

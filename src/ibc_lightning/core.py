@@ -6,7 +6,7 @@ Glossary
 B : バッチサイズ
 N : サンプリングの次元
 D : 行動次元
-E : 状態のembeddingの次元数
+E : 状態(or 観測)のembeddingの次元数
 
 References
 ----------
@@ -15,12 +15,13 @@ References
 * https://github.com/ALRhub/d3il
 """
 
-from __future__ import annotations
-
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TypeAlias
 
 import torch
 import torch.nn.functional as tf
+import wandb
 from einops import pack, rearrange, repeat
 from lightning import LightningModule
 from torch import Tensor, arange, nn
@@ -163,7 +164,7 @@ class IBC(LightningModule):
         # [*B, D] -> [B, D]
         actions, ps = pack([actions], "* D")
         # [*B, *] -> [B, *]
-        states = states.view(-1, *states.shape[len(ps[0]):])
+        states = states.view(-1, *states.shape[len(ps[0]) :])
 
         negatives = self.sample(
             batch_size=actions.shape[0],
@@ -255,3 +256,18 @@ class IBC(LightningModule):
         loss_dict = {"val_" + k: v for k, v in loss_dict.items()}
         self.log_dict(loss_dict, prog_bar=True, sync_dist=True)
         return loss_dict
+
+    @classmethod
+    def load_from_wandb(cls, reference: str) -> "IBC":
+        """Load the model from wandb checkpoint."""
+        run = wandb.Api().artifact(reference)  # type: ignore[no-untyped-call]
+        with TemporaryDirectory() as tmpdir:
+            ckpt = Path(run.download(root=tmpdir))
+            model = cls.load_from_checkpoint(
+                checkpoint_path=ckpt / "model.ckpt",
+                map_location=torch.device("cpu"),
+            )
+        if not isinstance(model, cls):
+            msg = f"Model is not an instance of {cls}"
+            raise TypeError(msg)
+        return model
