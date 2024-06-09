@@ -12,8 +12,7 @@ Lightning implementation of [Implicit Behavioral Cloning](https://arxiv.org/abs/
 from torch import randn, nn
 from ibc_lightning import IBC
 
-states = randn(10, 50, 64)
-actions = randn(10, 50, 2)
+states, actions = randn(10, 50, 64), randn(10, 50, 2)
 
 ibc = IBC(
     state_encoder=nn.Linear(64, 16),
@@ -25,7 +24,7 @@ ibc = IBC(
 # Predict energy
 energy = ibc.forward(states=states, actions=actions)
 
-# Predict action
+# Predict action (derivative-free optimization)
 action = ibc.predict_step(state=states[:, -1, :])
 ```
 
