@@ -5,7 +5,29 @@ model:
   class_path: ibc_lightning.IBC
   init_args:
     state_encoder:
+      class_path: utils.ModuleList
+      init_args:
+        modules:
+          - class_path: cnn.CoordConv2d
+          - class_path: torchgeometry.contrib.SpatialSoftArgmax2d
+          - class_path: einops.layers.torch.Rearrange
+            init_args:
+              pattern: 'b d xy -> b (d xy)'
+
     energy_head:
+      class_path: utils.ModuleList
+      init_args:
+        modules:
+          - class_path: torch.nn.Linear
+            init_args:
+              in_features: 12
+              out_features: 64
+          - class_path: torch.nn.ReLU
+          - class_path: torch.nn.Linear
+            init_args:
+              in_features: 64
+              out_features: 1
+
     upper_bounds: [1.0, 1.0]
     lower_bounds: [-1.0, -1.0]
 
@@ -13,12 +35,6 @@ optimizer:
   class_path: torch.optim.Adam
   init_args:
     lr: 0.001
-
-lr_scheduler:
-  class_path: torch.optim.lr_scheduler.StepLR
-  init_args:
-    step_size: 30
-    gamma: 0.50
 
 trainer:
   accelerator: gpu
@@ -33,15 +49,13 @@ trainer:
     init_args:
       log_model: true
       project: ibc-test
-      save_dir: .venv
+      save_dir: tmp
   callbacks:
-    -
-      class_path: RichProgressBar
     -
       class_path: EarlyStopping
       init_args:
         monitor: val_loss
-        patience: 50
+        patience: 200
         mode: min
         verbose: True
     - 

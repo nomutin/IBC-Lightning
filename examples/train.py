@@ -7,11 +7,14 @@ References
 
 """
 
+from pathlib import Path
+
 from lightning.pytorch.cli import LightningCLI
 
 
 def main() -> None:
     """Execute lightning cli."""
+    Path("tmp").mkdir(exist_ok=True)
     LightningCLI(save_config_callback=None)
 
 

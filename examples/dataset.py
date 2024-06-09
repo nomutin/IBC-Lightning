@@ -41,10 +41,11 @@ def generate_observations(actions: Tensor, size: int = 64) -> Tensor:
         画像データ. shape: [batch_size, num_point, 3, size, size]
 
     """
+    batch_size, num_points = actions.shape[:2]
     actions = actions.add(1).mul(size / 2).clamp(0, size - 1)
-    imgs = torch.zeros((len(actions), 3, size, size))
+    imgs = torch.zeros((batch_size, num_points, 3, size, size))
     x, y = actions[:, :, 0].long(), actions[:, :, 1].long()
-    imgs[:, :, x, y] = 1
+    imgs[:, :, :, x, y] = 1
     return imgs
 
 
