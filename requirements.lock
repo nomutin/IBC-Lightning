@@ -126,7 +126,7 @@ smmap==5.0.1
     # via gitdb
 sympy==1.12.1
     # via torch
-torch==2.3.0
+torch==2.3.1
     # via lightning
     # via pytorch-lightning
     # via torchmetrics
@@ -136,7 +136,7 @@ torchmetrics==1.4.0.post0
 tqdm==4.66.4
     # via lightning
     # via pytorch-lightning
-triton==2.3.0
+triton==2.3.1
     # via torch
 typing-extensions==4.12.1
     # via lightning
