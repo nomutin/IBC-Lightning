@@ -113,9 +113,9 @@ platformdirs==4.2.2
     # via wandb
 pluggy==1.5.0
     # via pytest
-protobuf==4.25.3
+protobuf==5.27.2
     # via wandb
-psutil==5.9.8
+psutil==6.0.0
     # via wandb
 pytest==8.2.2
     # via pytest-cov
@@ -129,7 +129,7 @@ pyyaml==6.0.1
 requests==2.32.3
     # via wandb
 ruff==0.4.7
-sentry-sdk==2.5.0
+sentry-sdk==2.7.0
     # via wandb
 setproctitle==1.3.3
     # via wandb
@@ -164,10 +164,9 @@ typing-extensions==4.12.1
     # via mypy
     # via pytorch-lightning
     # via torch
-urllib3==2.2.1
+urllib3==2.2.2
     # via requests
     # via sentry-sdk
-wandb==0.17.0
-    # via ibc-lightning
+wandb==0.17.3
 yarl==1.9.4
     # via aiohttp
