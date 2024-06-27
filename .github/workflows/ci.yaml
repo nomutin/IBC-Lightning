@@ -16,7 +16,9 @@ jobs:
       - name: Set up rye
         uses: eifinger/setup-rye@v3
       - name: Install dependencies
-        run: rye sync --no-lock
+        run: |
+          rye config --set-bool behavior.use-uv=true
+          rye sync --no-lock
       - name: Run lint
         run: rye lint
       - name: Run test with coverage
