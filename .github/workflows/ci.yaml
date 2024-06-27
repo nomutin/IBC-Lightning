@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -13,8 +16,14 @@ jobs:
       - name: Set up rye
         uses: eifinger/setup-rye@v3
       - name: Install dependencies
-        run: rye sync --no-lock
+        run: |
+          rye config --set-bool behavior.use-uv=true
+          rye sync --no-lock
       - name: Run lint
         run: rye lint
       - name: Run test with coverage
         run: rye run cov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

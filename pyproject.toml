@@ -1,6 +1,6 @@
 [project]
 name = "ibc_lightning"
-version = "0.0.1"
+version = "0.0.2"
 description = "pytorch-lightning implementation of IBC"
 authors = [
     { name = "nomutin", email = "nomura0508@icloud.com" }
@@ -8,7 +8,6 @@ authors = [
 dependencies = [
     "lightning>=2.2.5",
     "einops>=0.8.0",
-    "wandb>=0.17.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

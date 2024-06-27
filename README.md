@@ -3,6 +3,7 @@
 ![python](https://img.shields.io/badge/python-3.10-blue)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![CI](https://github.com/nomutin/IBC-Lightning/actions/workflows/ci.yaml/badge.svg)](https://github.com/nomutin/IBC-Lightning/actions/workflows/ci.yaml)
+[![codecov](https://codecov.io/gh/nomutin/IBC-Lightning/graph/badge.svg?token=K8TYB80GEE)](https://codecov.io/gh/nomutin/IBC-Lightning)
 
 Lightning implementation of [Implicit Behavioral Cloning](https://arxiv.org/abs/2109.00137).
 
