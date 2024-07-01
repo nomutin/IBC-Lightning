@@ -210,6 +210,9 @@ class IBC(LightningModule):
 
         """
         batch_size = state.shape[0]
+        upper_bounds = self.upper_bounds.to(self.device)
+        lower_bounds = self.lower_bounds.to(self.device)
+
         samples = self.sample(
             batch_size=batch_size,
             num_samples=self.inference_samples,
@@ -229,7 +232,7 @@ class IBC(LightningModule):
 
             samples = samples[torch.arange(batch_size)[..., None], idxs]
             samples = torch.randn_like(samples).mul(noise_scale).add(samples)
-            samples = samples.clamp(self.lower_bounds, self.upper_bounds)
+            samples = samples.clamp(lower_bounds, upper_bounds)
 
             noise_scale *= noise_shrink
 

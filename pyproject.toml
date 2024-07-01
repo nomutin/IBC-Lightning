@@ -1,6 +1,6 @@
 [project]
 name = "ibc_lightning"
-version = "0.0.2"
+version = "0.1.0"
 description = "pytorch-lightning implementation of IBC"
 authors = [
     { name = "nomutin", email = "nomura0508@icloud.com" }
@@ -51,11 +51,7 @@ target-version = "py310"
 [tool.ruff.lint]
 preview = true
 select = ["ALL"]
-ignore = [
-    "CPY001",  # missing-copyright-notice
-    "ISC001",  # single-line-implicit-string-concatenation
-    "COM812",  # missing-comma-in-multiline
-]
+ignore = ["CPY001"]
 fixable = ["ALL"]
 unfixable = []
 exclude = [".git", ".ruff_cache", ".venv",]
