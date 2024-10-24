@@ -48,37 +48,37 @@ class DummyHead(nn.Module):
         return torch.rand(batch_size, num_samples, 1)
 
 
-@pytest.fixture()
+@pytest.fixture
 def observations() -> Tensor:
     """観測."""
     return torch.rand(BATCH_SIZE, CHANNELS, HEIGHT, WIDTH)
 
 
-@pytest.fixture()
+@pytest.fixture
 def observations_timeseries() -> Tensor:
     """観測時系列."""
     return torch.rand(BATCH_SIZE, SEQ_LEN, CHANNELS, HEIGHT, WIDTH)
 
 
-@pytest.fixture()
+@pytest.fixture
 def actions() -> Tensor:
     """行動."""
     return torch.rand(BATCH_SIZE, ACTION_DIM)
 
 
-@pytest.fixture()
+@pytest.fixture
 def actions_timeseries() -> Tensor:
     """行動時系列."""
     return torch.rand(BATCH_SIZE, SEQ_LEN, ACTION_DIM)
 
 
-@pytest.fixture()
+@pytest.fixture
 def states() -> Tensor:
     """状態."""
     return torch.rand(BATCH_SIZE, STATE_DIM)
 
 
-@pytest.fixture()
+@pytest.fixture
 def states_timeseries() -> Tensor:
     """状態時系列."""
     return torch.rand(BATCH_SIZE, SEQ_LEN, STATE_DIM)

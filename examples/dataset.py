@@ -6,15 +6,25 @@ from lightning import LightningDataModule
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 
-from ibc_lightning.core import DataGroup
 
+def generete_actions(batch_size: int, num_points: int, noise_std: float) -> Tensor:
+    """
+    円運動の行動データ[batch_size, num_point, 2]を生成する.
 
-def generete_actions(
-    batch_size: int,
-    num_points: int,
-    noise_std: float,
-) -> Tensor:
-    """円運動の行動データ[batch_size, num_point, 2]を生成する."""
+    Parameters
+    ----------
+    batch_size : int
+        バッチサイズ.
+    num_points : int
+        サンプリングする点数.
+    noise_std : float
+        ノイズの標準偏差.
+
+    Returns
+    -------
+    Tensor
+        行動データ. shape: [batch_size, num_points, 2]
+    """
     t = torch.linspace(0, 2 * torch.pi, num_points)
     x = torch.sin(t).mul(0.8)
     y = torch.cos(t).mul(0.8)
@@ -49,7 +59,7 @@ def generate_observations(actions: Tensor, size: int = 64) -> Tensor:
     return imgs
 
 
-class CircleDataset(Dataset[DataGroup]):
+class CircleDataset(Dataset[tuple[Tensor, Tensor]]):
     """円運動のデータセット."""
 
     def __init__(self, action: Tensor, observation: Tensor) -> None:
@@ -58,11 +68,30 @@ class CircleDataset(Dataset[DataGroup]):
         self.observation = observation
 
     def __len__(self) -> int:
-        """データ数."""
+        """
+        データ数.
+
+        Returns
+        -------
+        int
+            データ数.
+        """
         return len(self.action)
 
-    def __getitem__(self, idx: int) -> DataGroup:
-        """データを取得する."""
+    def __getitem__(self, idx: int) -> tuple[Tensor, Tensor]:
+        """
+        データを取得する.
+
+        Parameters
+        ----------
+        idx : int
+            データのインデックス.
+
+        Returns
+        -------
+        tuple[Tensor, Tensor]
+            データ.
+        """
         return self.observation[idx, :-1], self.action[idx, 1:]
 
 
@@ -96,32 +125,40 @@ class CircleDataModule(LightningDataModule):
         self.num_points = num_points
         self.batch_size = batch_size
 
-    def setup(self, stage: str = "train") -> None:  # noqa: ARG002
+    def setup(self, stage: str = "fit") -> None:  # noqa: ARG002
         """データセットのセットアップ."""
         train_action = generete_actions(self.train_size, self.num_points, 0.05)
         train_observation = generate_observations(train_action)
-        self.train_dataset = CircleDataset(
-            action=train_action,
-            observation=train_observation,
-        )
+        self.train_dataset = CircleDataset(action=train_action, observation=train_observation)
 
         val_action = generete_actions(self.val_size, self.num_points, 0.05)
         val_observation = generate_observations(val_action)
-        self.validation_dataset = CircleDataset(
-            action=val_action,
-            observation=val_observation,
-        )
+        self.validation_dataset = CircleDataset(action=val_action, observation=val_observation)
 
-    def train_dataloader(self) -> DataLoader[DataGroup]:
-        """学習用のDataLoader."""
+    def train_dataloader(self) -> DataLoader[tuple[Tensor, Tensor]]:
+        """
+        学習用のDataLoader.
+
+        Returns
+        -------
+        DataLoader[tuple[Tensor, Tensor]]
+            学習用のDataLoader.
+        """
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[DataGroup]:
-        """検証用のDataLoader."""
+    def val_dataloader(self) -> DataLoader[tuple[Tensor, Tensor]]:
+        """
+        検証用のDataLoader.
+
+        Returns
+        -------
+        DataLoader[tuple[Tensor, Tensor]]
+            検証用のDataLoader.
+        """
         return DataLoader(
             self.validation_dataset,
             batch_size=self.batch_size,
