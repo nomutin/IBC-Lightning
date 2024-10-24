@@ -39,28 +39,27 @@ def ibc_state() -> IBC:
     )
 
 
-def test__shared_step_single(
+def test__calc_loss_single(
     ibc: IBC,
     observations: Tensor,
     actions: Tensor,
 ) -> None:
-    """`shared_step` の簡単なテストケース."""
-    batch = (observations, actions)
-    loss_dict = ibc.shared_step(batch=batch)
-    assert "loss" in loss_dict
-    assert loss_dict["loss"].shape == ()
+    """`calc_loss` の簡単なテストケース."""
+    loss = ibc.calc_loss(actions=actions, states=observations)
+    assert loss.shape == ()
 
 
-def test__shared_step_timeseries(
+def test__calc_loss_timeseries(
     ibc: IBC,
     observations_timeseries: Tensor,
     actions_timeseries: Tensor,
 ) -> None:
-    """`shared_step` の簡単なテストケース(時系列)."""
-    batch = (observations_timeseries, actions_timeseries)
-    loss_dict = ibc.shared_step(batch=batch)
-    assert "loss" in loss_dict
-    assert loss_dict["loss"].shape == ()
+    """`calc_loss` の簡単なテストケース(時系列)."""
+    loss = ibc.calc_loss(
+        actions=actions_timeseries,
+        states=observations_timeseries,
+    )
+    assert loss.shape == ()
 
 
 def test__shared_step_state(
@@ -68,50 +67,27 @@ def test__shared_step_state(
     states: Tensor,
     actions: Tensor,
 ) -> None:
-    """`shared_step` の簡単なテストケース(状態-行動)."""
-    batch = (states, actions)
-    loss_dict = ibc_state.shared_step(batch=batch)
-    assert "loss" in loss_dict
-    assert loss_dict["loss"].shape == ()
+    """`calc_loss` の簡単なテストケース(状態-行動)."""
+    loss = ibc_state.calc_loss(actions=actions, states=states)
+    assert loss.shape == ()
 
 
-def test__shared_step_state_timeseries(
+def test__calc_loss_state_timeseries(
     ibc_state: IBC,
     states_timeseries: Tensor,
     actions_timeseries: Tensor,
 ) -> None:
-    """`shared_step` の簡単なテストケース(状態-行動)."""
-    batch = (states_timeseries, actions_timeseries)
-    loss_dict = ibc_state.shared_step(batch=batch)
-    assert "loss" in loss_dict
-    assert loss_dict["loss"].shape == ()
+    """`calc_loss` の簡単なテストケース(状態-行動)."""
+    loss = ibc_state.calc_loss(
+        actions=actions_timeseries,
+        states=states_timeseries,
+    )
+    assert loss.shape == ()
 
 
 def test__predict_step(ibc: IBC, observations: Tensor) -> None:
     """`predict_step` の簡単なテストケース."""
-    actions = ibc.predict_step(observations)
+    actions = ibc.inference(observations)
     assert actions.shape == (BATCH_SIZE, ACTION_DIM)
     assert actions.min() >= -1.0
     assert actions.max() <= 1.0
-
-
-def test__training_step(
-    ibc: IBC,
-    observations: Tensor,
-    actions: Tensor,
-) -> None:
-    """`training_step` の簡単なテストケース."""
-    loss_dict = ibc.training_step(batch=(observations, actions))
-    assert "loss" in loss_dict
-    assert loss_dict["loss"].shape == ()
-
-
-def test__validation_step(
-    ibc: IBC,
-    observations: Tensor,
-    actions: Tensor,
-) -> None:
-    """`validation_step` の簡単なテストケース."""
-    loss_dict = ibc.validation_step(batch=(observations, actions))
-    assert "val_loss" in loss_dict
-    assert loss_dict["val_loss"].shape == ()
