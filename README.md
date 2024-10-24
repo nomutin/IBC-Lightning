@@ -1,6 +1,7 @@
 # IBC-Lightning
 
 ![python](https://img.shields.io/badge/python-3.10-blue)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![CI](https://github.com/nomutin/IBC-Lightning/actions/workflows/ci.yaml/badge.svg)](https://github.com/nomutin/IBC-Lightning/actions/workflows/ci.yaml)
 [![codecov](https://codecov.io/gh/nomutin/IBC-Lightning/graph/badge.svg?token=K8TYB80GEE)](https://codecov.io/gh/nomutin/IBC-Lightning)
@@ -34,6 +35,7 @@ action = ibc.predict_step(state=states[:, -1, :])
 Training script is in [./examples/](examples/).
 
 ```bash
+uv sync --extra train
 cd examples/ && python train.py fit --config config.yaml
 ```
 
