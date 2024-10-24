@@ -13,7 +13,7 @@ from tests.conftest import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def ibc() -> IBC:
     """ダミーの IBC インスタンス(行動-観測)."""
     return IBC(
@@ -26,7 +26,7 @@ def ibc() -> IBC:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def ibc_state() -> IBC:
     """ダミーの IBC インスタンス(行動-状態)."""
     return IBC(

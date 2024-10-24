@@ -15,16 +15,11 @@ References
 * https://github.com/ALRhub/d3il
 """
 
-from typing import TypeAlias
-
 import torch
 import torch.nn.functional as tf
 from einops import pack, rearrange, repeat
 from lightning import LightningModule
 from torch import Tensor, arange, nn
-
-DataGroup: TypeAlias = tuple[Tensor, Tensor]
-LossDict: TypeAlias = dict[str, Tensor]
 
 
 class IBC(LightningModule):
@@ -109,11 +104,7 @@ class IBC(LightningModule):
         samples = samples.add(self.lower_bounds)
         return samples.to(self.device)
 
-    def shuffle(
-        self,
-        positive: Tensor,
-        negatives: Tensor,
-    ) -> tuple[Tensor, Tensor]:
+    def shuffle(self, positive: Tensor, negatives: Tensor) -> tuple[Tensor, Tensor]:
         """
         正例と負例をシャッフルする.
 
@@ -139,13 +130,13 @@ class IBC(LightningModule):
         ground_truth = (permutation == 0).nonzero()[:, 1].to(self.device)
         return samples, ground_truth
 
-    def shared_step(self, batch: tuple[Tensor, Tensor]) -> dict[str, Tensor]:
+    def shared_step(self, batch: tuple[Tensor, ...]) -> dict[str, Tensor]:
         """
         学習ステップ.
 
         Parameters
         ----------
-        batch : DataGroup
+        batch : tuple[Tensor, Tensor]
             states: Tensor
                 状態. shape: [*B, *]
             actions: Tensor
@@ -163,23 +154,10 @@ class IBC(LightningModule):
         # [*B, *] -> [B, *]
         states = states.view(-1, *states.shape[len(ps[0]) :])
 
-        negatives = self.sample(
-            batch_size=actions.shape[0],
-            num_samples=self.train_samples,
-        )
-        actions, ground_truth = self.shuffle(
-            positive=actions,
-            negatives=negatives,
-        )
-        energy = self.forward(
-            actions=actions,
-            states=states,
-        )
-        loss = tf.cross_entropy(
-            input=energy.mul(-1),
-            target=ground_truth,
-        )
-
+        negatives = self.sample(batch_size=actions.shape[0], num_samples=self.train_samples)
+        actions, ground_truth = self.shuffle(positive=actions, negatives=negatives)
+        energy = self.forward(actions=actions, states=states)
+        loss = tf.cross_entropy(input=energy.mul(-1), target=ground_truth)
         return {"loss": loss}
 
     def predict_step(
@@ -213,16 +191,10 @@ class IBC(LightningModule):
         upper_bounds = self.upper_bounds.to(self.device)
         lower_bounds = self.lower_bounds.to(self.device)
 
-        samples = self.sample(
-            batch_size=batch_size,
-            num_samples=self.inference_samples,
-        )
+        samples = self.sample(batch_size=batch_size, num_samples=self.inference_samples)
 
         for _ in range(num_iters):
-            energies = self.forward(
-                states=state,
-                actions=samples,
-            )
+            energies = self.forward(states=state, actions=samples)
             probs = tf.softmax(energies.mul(-1.0), dim=-1)
             idxs = torch.multinomial(
                 input=probs,
@@ -236,22 +208,49 @@ class IBC(LightningModule):
 
             noise_scale *= noise_shrink
 
-        energies = self.forward(
-            states=state,
-            actions=samples,
-        )
+        energies = self.forward(states=state, actions=samples)
         probs = tf.softmax(energies.mul(-1.0), dim=-1)
         best_idxs = probs.argmax(dim=-1)
         return samples[torch.arange(batch_size), best_idxs, :]
 
-    def training_step(self, batch: DataGroup, **_: str) -> LossDict:
-        """学習ステップ."""
-        loss_dict = self.shared_step(batch)
+    def training_step(self, batch: tuple[Tensor, ...], **_: str) -> dict[str, Tensor]:
+        """
+        学習ステップ.
+
+        Parameters
+        ----------
+        batch : tuple[Tensor, ...]
+            states: Tensor
+                状態. shape: [*B, *]
+            actions: Tensor
+                行動. shape: [*B, D]
+
+        Returns
+        -------
+        loss : dict[str, Tensor]
+            損失.
+        """
+        loss_dict = self.shared_step(batch=batch)
         self.log_dict(loss_dict, prog_bar=True, sync_dist=True)
         return loss_dict
 
-    def validation_step(self, batch: DataGroup, **_: int) -> LossDict:
-        """検証ステップ."""
+    def validation_step(self, batch: tuple[Tensor, ...], **_: int) -> dict[str, Tensor]:
+        """
+        検証ステップ.
+
+        Parameters
+        ----------
+        batch : tuple[Tensor, ...]
+            states: Tensor
+                状態. shape: [*B, *]
+            actions: Tensor
+                行動. shape: [*B, D]
+
+        Returns
+        -------
+        loss : dict[str, Tensor]
+            損失.
+        """
         loss_dict = self.shared_step(batch)
         loss_dict = {"val_" + k: v for k, v in loss_dict.items()}
         self.log_dict(loss_dict, prog_bar=True, sync_dist=True)
