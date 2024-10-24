@@ -23,6 +23,7 @@ train = [
     "lightning[extra]>=2.4.0",
     "poethepoet>=0.29.0",
     "torchgeometry>=0.1.2",
+    "torchrl>=0.6.0",
     "wandb>=0.18.5",
     "whitecanvas[matplotlib]>=0.3.3",
 ]
@@ -53,7 +54,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
 "src/ibc_lightning/core.py" = ["PLR0913"]
-"examples/*" = ["DOC201"]
+"example/*" = ["DOC201"]
 "tests/*" = ["PLR6301", "DOC201", "S101"]
 
 [tool.ruff.format]

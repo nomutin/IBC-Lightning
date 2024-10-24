@@ -11,6 +11,7 @@ from lightning.pytorch.loggers.wandb import WandbLogger
 from matplotlib import pyplot as plt
 from torch import Tensor, nn
 from torchgeometry.contrib import SpatialSoftArgmax2d
+from torchrl.modules import MLP
 from tqdm import tqdm
 from wandb import Image
 from whitecanvas import new_grid
@@ -24,19 +25,10 @@ class LitIBC(LightningModule):
 
     def __init__(self) -> None:
         super().__init__()
-        state_encoder = nn.Sequential(
-            SpatialSoftArgmax2d(),
-            Rearrange("b d xy -> b (d xy)"),
-        )
-        energy_head = nn.Sequential(
-            nn.Linear(6 + 2, 64),
-            nn.Mish(),
-            nn.Linear(64, 64),
-            nn.Mish(),
-            nn.Linear(64, 1),
-        )
+        encoder = nn.Sequential(SpatialSoftArgmax2d(), Rearrange("b d xy -> b (d xy)"))
+        energy_head = MLP(8, out_features=1, depth=2, num_cells=64, activation_class=nn.Mish)
         self.model = IBC(
-            state_encoder=state_encoder,
+            state_encoder=encoder,
             energy_head=energy_head,
             upper_bounds=(1.0, 1.0),
             lower_bounds=(-1.0, -1.0),
@@ -80,11 +72,13 @@ class LogLitIBC(Callback):
             observations, actions = next(iter(dataloader))
             observations = observations[:self.num_samples].to(pl_module.device)
             actions = actions[:self.num_samples].to(pl_module.device)
+
             prediction_list = []
             for t in tqdm(range(actions.shape[1])):
                 prediction = pl_module.model.inference(state=observations[:, t, :])
                 prediction_list.append(prediction)
             predictions = torch.stack(prediction_list, dim=1)
+
             with TemporaryDirectory() as tmp_dir:
                 figure_path = Path(tmp_dir) / "prediction.png"
                 plot_joint_prediction(target=actions, prediction=predictions)

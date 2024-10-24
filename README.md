@@ -8,6 +8,12 @@
 
 Lightning implementation of [Implicit Behavioral Cloning](https://arxiv.org/abs/2109.00137).
 
+## Installation
+
+```bash
+pip install git+https://github.com/nomutin/IBC-Lightning.git
+```
+
 ## API
 
 ```python
@@ -32,7 +38,7 @@ action = ibc.inference(state=states[:, -1, :])
 
 ## Example
 
-Training script is in [./examples/](examples/).
+Training script is in [./example/](example/).
 
 ```bash
 uv sync --extra train
