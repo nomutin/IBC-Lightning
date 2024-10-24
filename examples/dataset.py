@@ -55,7 +55,8 @@ def generate_observations(actions: Tensor, size: int = 64) -> Tensor:
     actions = actions.add(1).mul(size / 2).clamp(0, size - 1)
     imgs = torch.zeros((batch_size, num_points, 3, size, size))
     x, y = actions[:, :, 0].long(), actions[:, :, 1].long()
-    imgs[:, :, :, x, y] = 1
+    for t in range(num_points):
+        imgs[:, t, :, x[:, t], y[:, t]] = 1
     return imgs
 
 

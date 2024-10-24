@@ -188,6 +188,7 @@ class IBC(nn.Module):
         lower_bounds = self.lower_bounds.to(state.device)
 
         samples = self.sample(batch_size=batch_size, num_samples=self.inference_samples)
+        samples = samples.to(state.device)
 
         for _ in range(num_iters):
             energies = self.forward(states=state, actions=samples)
