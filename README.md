@@ -27,7 +27,7 @@ ibc = IBC(
 energy = ibc.forward(states=states, actions=actions)
 
 # Predict action (derivative-free optimization)
-action = ibc.predict_step(state=states[:, -1, :])
+action = ibc.inference(state=states[:, -1, :])
 ```
 
 ## Example
@@ -36,7 +36,7 @@ Training script is in [./examples/](examples/).
 
 ```bash
 uv sync --extra train
-cd examples/ && python train.py fit --config config.yaml
+poe train fit --config examples/config.yaml --trainer.devices [x]
 ```
 
 ## References
